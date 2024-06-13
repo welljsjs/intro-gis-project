@@ -1,4 +1,4 @@
-# Intro to Gis - Uni Project
+# Intro to GIS - Uni Project
 
 This project uses `renv` for R dependency management. All packages will be installed, if necessary, by the project itself. No preinstallation is needed.
 
