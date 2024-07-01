@@ -44,7 +44,7 @@ lapply(packages, library, character.only = T)
 
 <!-- The report itself should be an R markdown or a Quarto R document of roughly 5 pages (counting without code but including meaningful images or tables that you create), and I should find inside of it a part where you explain the data structure and show summary statistics, a part where you present your research questions and your starting hypothesis, a part where you explain your chosen method of analysis and then apply it and finally a concluding part where you discuss what you find in relation to your hypothesis. -->
 
-```{r Data Setup, echo = F}
+```{r Data Setup, echo=, warning=FALSE}
 # Open Data Dresden Portal Data
 stadtteile_sf = read_sf(here("data", "stadtteile.gpkg"))
 bevoelkerung_0_bis_5_jahre_sf = read_sf(here("data", "bevoelkerung_0_bis_5_jahre.gpkg"))
@@ -65,6 +65,10 @@ senioren_und_pflegeheime_sf = read_sf(here("data", "senioren_und_pflegeheime.gpk
 seniorenbegegnunsstaetten_sf = read_sf(here("data", "seniorenbegegnunsstaetten.gpkg"))
 
 # Data Preparation
+setdiff(stadtteile_sf$blocknr %>% unique(), bevoelkerung_0_bis_26_jahre_sf$stadtteil %>% unique()) # Check for missing quarters: 33, 34, 44
+# remove missing quarters from stadtteile
+stadtteile_sf = stadtteile_sf %>% filter(!blocknr %in% c(33, 34, 44))
+
 cityIdToNumeric = function(bevoelkerung) {
   return (bevoelkerung %>% mutate(stadtteil = as.numeric(stadtteil)) %>% arrange(stadtteil)) # Turn chr to numeric
 }
@@ -88,7 +92,18 @@ stadtteile_sf$duration_to_altmarkt_by_car = dresden_stadtteile_distances_to_cent
 
 
 # OSM Data features
-dresden_osm_sf = opq("Dresden") %>% add_osm_feature(key = "amenity", value = "school") %>% osmdata_sf()
+# Schools and Kindergartens
+dresden_schools_sf = opq("Dresden") %>% add_osm_feature(key = "amenity", value = "school") %>% osmdata_sf() 
+stadtteile_sf$schools_count = dresden_schools_sf$osm_polygons %>% .[!duplicated(paste0(.$`addr:housenumber`, .$`addr:street`)), ] %>% 
+  st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums()
+# Restaurants
+dresden_restaurants_sf = opq("Dresden") %>% add_osm_feature(key = "amenity", value = "restaurant") %>% osmdata_sf()
+stadtteile_sf$restaurants_count = dresden_restaurants_sf$osm_points %>% .[!duplicated(paste0(.$`addr:housenumber`, .$`addr:street`)), ] %>% 
+  st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums()
+# Parks, 322,1776km^2 free, rest park of 327,2883km^2 total, so 5,1107km^2 parks.
+dresden_parks_sf = opq("Dresden") %>% add_osm_feature(key = "leisure", value = "park") %>% osmdata_sf()
+stadtteile_sf$parks_surf_tot = dresden_parks_sf$osm_polygons %>%
+  st_intersects(x = stadtteile_sf, y = ., sparse = T) %>% lapply(function(x) st_area(dresden_parks_sf$osm_polygons[x, ]) %>% sum) %>% unlist()
 
 # Quiet Areas Data (EU)
 quiet_areas_rast <- terra::rast(here("data", "quiet_areas_europe_qis.tif")) %>% 
@@ -107,17 +122,46 @@ bevoelkerung_ab_60_jahre_sf = bevoelkerung_60_bis_74_jahre_sf %>% # upper bin
   mutate(prozent = prozent + bevoelkerung_ab_75_jahre_sf$prozent, 
          anteil = anteil + bevoelkerung_ab_75_jahre_sf$anteil)
 stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_ab_60_jahre_sf)[c("stadtteil", "prozent")] %>% # Merge bevoelkerung_ab_60_jahre_sf into stadtteile_sf
-        rename(bevoelkerung_ab_60_jahre.prozent = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
+        rename(p_from_60_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
 bevoelkerung_0_bis_26_jahre_sf = bevoelkerung_0_bis_5_jahre_sf %>% # lower bin
   mutate(prozent = prozent + bevoelkerung_6_bis_13_jahre_sf$prozent + bevoelkerung_14_bis_17_jahre_sf$prozent + bevoelkerung_18_bis_26_jahre_sf$prozent, 
          anteil = anteil + bevoelkerung_6_bis_13_jahre_sf$anteil + bevoelkerung_14_bis_17_jahre_sf$anteil + bevoelkerung_18_bis_26_jahre_sf$anteil)
 stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_0_bis_26_jahre_sf)[c("stadtteil", "prozent")] %>% # Merge bevoelkerung_0_bis_26_jahre_sf into stadtteile_sf
-        rename(bevoelkerung_0_bis_26_jahre_sf.prozent = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
+        rename(p_0_bis_26_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
 stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_27_bis_59_jahre_sf)[c("stadtteil", "prozent")] %>% # Merge bevoelkerung_27_bis_59_jahre_sf into stadtteile_sf
-        rename(bevoelkerung_27_bis_59_jahre_sf.prozent = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
+        rename(p_27_to_59_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all = T)
+# Merge other features into stadtteile_sf
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_0_bis_5_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_0_to_5_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T)
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_6_bis_13_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_6_to_13_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T)
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_14_bis_17_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_14_to_17_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T)
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_18_bis_26_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_18_to_26_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T) 
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_60_bis_74_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_60_to_74_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T)
+stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_ab_75_jahre_sf)[c("stadtteil", "prozent")] %>% 
+        rename(p_from_75_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T) 
 
 
-# Data Preparation
+# Gesundheitsdienste Prep
+stadtteile_sf$gesundheitseinrichtungen_count = gesundheitseinrichtungen_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$ambulante_mobile_dienste_count = ambulante_mobile_dienste_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$senioren_pflegeheime_count = senioren_und_pflegeheime_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$seniorenbegegnunsstaetten_count = seniorenbegegnunsstaetten_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$betreutes_wohnen_count = betreutes_wohnen_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$haltestellen_count = haltestellen_sf %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() 
+stadtteile_sf$bahnhoefe_count = bahnhoefe_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$laermindex_mean = laermindex_sf %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowMeans() 
+
+# OSM Data Preparation
 dresden_osm_sf$osm_points = dresden_osm_sf$osm_points[!duplicated(dresden_osm_sf$osm_points$name) & # TODO: could generalise the inner part to a function for OSM features
                                                             !is.na(dresden_osm_sf$osm_points$name) & 
                                                             !duplicated(paste0(dresden_osm_sf$osm_points$`addr:housenumber`, dresden_osm_sf$osm_points$`addr:street`)), ] %>%   # Remove duplicates and NA
@@ -139,7 +183,7 @@ My base datasets on the age of the population in Dresden as well as data on the 
 
 [^1]: For more information on the data, see <https://kommisdd.dresden.de/net3/public/ogc.ashx?Service=Ikx&RenderHint=TargetHtml&NODEID=378&>.
 
-```{r echo = F, base_map_dresden, fig.width = 8}
+```{r base_map_dresden, echo = F, fig.width = 8}
 ggplot(data = stadtteile_sf) +
   geom_sf() + theme_minimal() + 
   # geom_sf(data = dresden_stadtteile_centroids, size = 0.5, colour = "black", alpha = 0.3) + 
@@ -152,7 +196,7 @@ ggplot(data = stadtteile_sf) +
 Let's now take a look at the data on the age of the population in Dresden. Yellow indicates a higher percentage of the population in the respective age group in the quarter (and blue a lower percentage). The data is available for the following age groups: zero to five years, six to 13 years, 14 to 17 years, 18 to 26 years, 27 to 59 years, 60 to 74 years, and from 75 years.
 
 
-```{r, echo = F, fig.height=6}
+```{r dresden pop maps, echo = F, fig.height=6}
 plot_titles = c("0 to 5 years", "6 to 13 years", "14 to 17 years", "18 to 26 years", 
            "27 to 59 years", "60 to 74 years", "From 75 years")
 names(plot_titles) = as.character(1:length(plot_titles))
@@ -177,7 +221,7 @@ do.call(grid.arrange,
 
 ```
 
-```{r, echo = F, fig.height = 6}
+```{r dresden pop stats, echo = F, fig.height = 6}
 combined_bev_sf = dplyr::bind_rows(list(bevoelkerung_0_bis_5_jahre_sf, bevoelkerung_6_bis_13_jahre_sf,  
                                         bevoelkerung_14_bis_17_jahre_sf, bevoelkerung_18_bis_26_jahre_sf, 
                                         bevoelkerung_27_bis_59_jahre_sf, bevoelkerung_60_bis_74_jahre_sf, 
@@ -244,7 +288,7 @@ plot_bar_pop_dd_bin = ggplot(binned_bev_summ, aes(x = gruppe, y = mean)) + geom_
 
 plot_grid(plot_line_pop_dd, plot_line_pop_dd_bin, plot_bar_pop_dd, plot_bar_pop_dd_bin, ncol = 2, rel_widths = c(3, 2), byrow = F)
 ```
-```{r corr, echo = F, fig.height = 5}
+```{r corr dresden pop, echo = F, fig.height = 5}
 corr_mat_pop = data.frame(bevoelkerung_0_bis_5_jahre_sf$prozent, bevoelkerung_6_bis_13_jahre_sf$prozent, bevoelkerung_14_bis_17_jahre_sf$prozent, bevoelkerung_18_bis_26_jahre_sf$prozent, bevoelkerung_27_bis_59_jahre_sf$prozent, bevoelkerung_60_bis_74_jahre_sf$prozent, bevoelkerung_ab_75_jahre_sf$prozent)
 colnames(corr_mat_pop) = plot_titles
 corr_mat_pop = cor(corr_mat_pop) %>% melt()
@@ -271,7 +315,7 @@ All correlations with the oldest age group are negative except for the correlati
 # Method of Analysis and Application
 
 ## PCA, t-SNE, Multi-Dimensional Scaling, Heatmaps
-```{r analysis - correlation matrix, echo = F, fig.height = 5}
+```{r analysis - correlation matrix, echo = F, fig.height = 8}
 stadtteile_nums_df = stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% 
   mutate_all(~replace(., is.na(.), 0)) %>% dplyr::select(-c(blocknr))
 stadtteile_nums_df %>% cor(use="na.or.complete") %>% melt() %>% 
@@ -286,7 +330,7 @@ stadtteile_nums_df %>% cor(use="na.or.complete") %>% melt() %>%
 pca_stadtteile = prcomp(stadtteile_nums_df, scale = T)
 pca_stadtteile$eigenvalues = pca_stadtteile$sdev^2
 # biplot(pca_stadtteile)
-# PCA(stadtteile_nums_df, graph = T)
+PCA(stadtteile_nums_df, graph = T)
 
 summary(pca_stadtteile)
 
@@ -294,7 +338,8 @@ ggplot() + geom_point(aes(x = seq_along(pca_stadtteile$eigenvalues),
                           y = pca_stadtteile$eigenvalues / sum(pca_stadtteile$eigenvalues))) + 
   geom_line(aes(x = seq_along(pca_stadtteile$eigenvalues), 
                 y = pca_stadtteile$eigenvalues / sum(pca_stadtteile$eigenvalues)), linewidth = 0.2) +
-  geom_vline(xintercept = 2, colour = "red", linewidth = 0.2) +
+  geom_vline(xintercept = 4, colour = "red", linewidth = 0.2) +
+  geom_vline(xintercept = 10, colour = "red", linewidth = 0.2) +
   theme_bw() + labs(x = "Principal Component", y = "Proportion of Variance Explained")
 ```
 
