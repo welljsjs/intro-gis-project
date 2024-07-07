@@ -188,6 +188,12 @@ ggplot(data = stadtteile_sf) +
   geom_sf(data = altmarkt_sf, size = 1, colour = "blue")
 ```
 
+Another source is the absolute number of people per quarter in Dresden which has been taken from Statista [@dresdenEinwohnerzahlEinzelnenStadtteilen2023] and is part of this repository; it's available as CSV.
+
+The raster data I'm using is a TIF file from the European Environment Agency on the QSI, the quietness suitability ratio. This data is over 2GiB, so you can find it split into pieces in the repository. It has to be merged before usage; it can also be downloaded from the original source[@europeanenvironmentagencyQuietnessSuitabilityIndex2016].
+
+I'm also working with data from OSM (OpenStreetMap) on the number of restaurants and surface area of parks in Dresden per quarter. The data has been downloaded from the OSM API using the `osmdata` package.
+
 Let's now take a look at the data on the age of the population in Dresden. Yellow indicates a higher percentage of the population in the respective age group in the quarter (and blue a lower percentage). The data is available for the following age groups: zero to five years, six to 13 years, 14 to 17 years, 18 to 26 years, 27 to 59 years, 60 to 74 years, and from 75 years. There is no data for three of the 64 quarters in Dresden, namely "Flughafen", "Hellerberge" and "Dresdner Heide"; I'll thus exclude these in the analysis.
 
 Below, you will find two line graphs and two bar charts; the second row shows the binned versions, that is, I merged the age groups because the middle age group from 27 to 59 makes up quite a large percentage compared to the others.
@@ -287,6 +293,8 @@ plot_grid(plot_line_pop_dd, plot_line_pop_dd_bin, plot_bar_pop_dd, plot_bar_pop_
 
 The biggest percentage of the population is always taken up by the people between 27 to 59 years, with one exception: in "Südvorstadt-Ost" (quarter id 82), the percentage of people between 18 and 26 years is slightly higher (37.4%) than the percentage of people between 27 and 59 years (35.2%). However, this is an outlier of the share of people between 18 and 26 years as their median percentage is 9.2% and their mean 10.84% with a standard deviation of 5.87%; the people between 27 and 59 years have the highest share with a mean of 43.63%, a median of 42.59% and a standard deviation of 5.13%.
 
+People between 27 and 59 years seem to live rather centered (f.ex. 60.19% in "Neustadt"). People in the age group of 60 to 74 years seem to move to outer areas, although it consequently does not seem intuitive why the age group above 75 years mainly lives in inner quarters (block nr. 7, "Johannstadt-Süd") of Dresden. This could be because people in this highest age group prefer more urban, central areas due to various reasons like access to health care or shorter distances. I'll try to look at some more variables for more explanation.
+
 # Statistics Summary
 
 Below, you will find a table of common statistics (mean, median, maximum, minimum and standard deviation) of the used values:
@@ -294,10 +302,14 @@ Below, you will find a table of common statistics (mean, median, maximum, minimu
 ```{r common stats, echo = F}
 stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% dplyr::select(!blocknr) %>% summary()
 ```
+It 
+
 
 [@R-OpenStreetMap]
 
 [@europeanenvironmentagencyQuietnessSuitabilityIndex2016]
+
+It is questionable if all of these variables are useful for the analysis as some of them have very few observations like f.ex. the number of health care facilities. I'll look at the correlation matrix of the variables to see if there are  variables that are highly/lowly correlated and could be in- or excluded from the analysis. 
 
 # Analysis
 
@@ -313,13 +325,13 @@ ggplot(corr_mat_pop, aes(x = Var1, y = Var2, fill = value)) +
   scale_fill_viridis_c() + 
   theme_minimal() + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1), axis.text.y = element_text(angle = 0)) + 
-  labs(x = "", y = "", title = "Correlation Matrix of Dresden Population by Age Group") 
+  labs(x = "", y = "", title = "Correlation Matrix of Dresden Population by Age Group", fill = "Correlation") 
 
 # ggplot(combined_bev_sf) + 
 #   geom_point(aes(x = rep(bevoelkerung_ab_75_jahre_sf$prozent, 7), y = combined_bev_sf$prozent[seq_len(nrow(combined_bev_sf)/7*7)], fill = "gruppe")) 
 ```
 
-Highest positive correlation: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained that in Germany, people usually stay in school at least until the age of 16 years. All correlations with the oldest age group are negative except for the correlation with the age group 60 to 74 years. This could indicate
+Highest positive correlation: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained that in Germany, people usually stay in school at least until the age of 16 years. Also, as children between the age of 0 and 5 usually grow up with their parents at their parent's place, these values should be correlated. All correlations with the highest (oldest) age group are negative except for the correlation with the age group 60 to 74 years. This could be an indicator that elderly people prefer to live in quarters with fewer children and fewer younger people (although it is natural that there is some "squeezing out" since I'm dealing with percentages, so if one group grows, some others have to shrink).
 
 ```{r analysis - correlation matrix, echo = F, fig.height = 10}
 stadtteile_nums_df = stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% 
@@ -332,6 +344,7 @@ stadtteile_nums_df %>% cor(use="na.or.complete") %>% melt() %>%
   labs(x = "", y = "", title = "Correlation Matrix of Dresden Quarter Features", fill = "Correlation") 
 
 ```
+This correlation matrix of all features/variables shows that 
 
 ## PCA Analysis
 
@@ -352,6 +365,7 @@ pca_stadtteile$rotation
 
 #summary(pca_stadtteile)
 ```
+
 ```{r pca screeplot, echo = F, fig.width = 10}
 ggplot() + geom_point(aes(x = seq_along(pca_stadtteile$eigenvalues), 
                           y = pca_stadtteile$eigenvalues / sum(pca_stadtteile$eigenvalues))) + 
@@ -363,7 +377,6 @@ ggplot() + geom_point(aes(x = seq_along(pca_stadtteile$eigenvalues),
 ```
 
 # Conclusion
-
 
 # References
 
