@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.6.20)  6 JUL 2024 14:42
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.6.20)  7 JUL 2024 21:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -659,12 +659,12 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 \tf@toc=\write3
 \openout3 = `report.toc'.
 
-<report_files/figure-latex/base_map_dresden-1.pdf, id=15, 398.48875pt x 313.17p
+<report_files/figure-latex/base_map_dresden-1.pdf, id=16, 398.48875pt x 313.17p
 t>
 File: report_files/figure-latex/base_map_dresden-1.pdf Graphic file (type pdf)
 <use report_files/figure-latex/base_map_dresden-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/base_map_dresden-1.pdf  used
- on input line 162.
+ on input line 166.
 (pdftex.def)             Requested size: 398.49992pt x 313.17877pt.
 
 
@@ -672,81 +672,68 @@ Package pdftex.def Info: report_files/figure-latex/base_map_dresden-1.pdf  used
 
 {/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2024/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}]
-<report_files/figure-latex/unnamed-chunk-1-1.pdf, id=40, 425.59pt x 428.60126pt
->
-File: report_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf)
-<use report_files/figure-latex/unnamed-chunk-1-1.pdf>
-Package pdftex.def Info: report_files/figure-latex/unnamed-chunk-1-1.pdf  used 
-on input line 171.
+<report_files/figure-latex/dresden pop maps-1.pdf, id=42, 425.59pt x 428.60126p
+t>
+File: report_files/figure-latex/dresden pop maps-1.pdf Graphic file (type pdf)
+<use report_files/figure-latex/dresden pop maps-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/dresden pop maps-1.pdf  used
+ on input line 182.
 (pdftex.def)             Requested size: 425.58894pt x 428.6002pt.
 
 
 [2 <./report_files/figure-latex/base_map_dresden-1.pdf>]
-<report_files/figure-latex/unnamed-chunk-2-1.pdf, id=53, 459.7175pt x 423.5825p
-t>
-File: report_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type pdf)
-<use report_files/figure-latex/unnamed-chunk-2-1.pdf>
-Package pdftex.def Info: report_files/figure-latex/unnamed-chunk-2-1.pdf  used 
-on input line 173.
+<report_files/figure-latex/dresden pop stats-1.pdf, id=55, 459.7175pt x 423.582
+5pt>
+File: report_files/figure-latex/dresden pop stats-1.pdf Graphic file (type pdf)
+
+<use report_files/figure-latex/dresden pop stats-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/dresden pop stats-1.pdf  use
+d on input line 184.
 (pdftex.def)             Requested size: 452.99626pt x 417.38957pt.
-<report_files/figure-latex/corr-1.pdf, id=54, 439.6425pt x 337.26pt>
-File: report_files/figure-latex/corr-1.pdf Graphic file (type pdf)
-<use report_files/figure-latex/corr-1.pdf>
-Package pdftex.def Info: report_files/figure-latex/corr-1.pdf  used on input li
-ne 174.
+
+
+[3 <./report_files/figure-latex/dresden pop maps-1.pdf>]
+
+[4 <./report_files/figure-latex/dresden pop stats-1.pdf>]
+Overfull \vbox (1002.60149pt too high) has occurred while \output is active []
+
+
+
+[5]
+<report_files/figure-latex/corr dresden pop-1.pdf, id=90, 439.6425pt x 337.26pt
+>
+File: report_files/figure-latex/corr dresden pop-1.pdf Graphic file (type pdf)
+<use report_files/figure-latex/corr dresden pop-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/corr dresden pop-1.pdf  used
+ on input line 372.
 (pdftex.def)             Requested size: 439.64812pt x 337.26431pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 173--181
-[]
- []
-
-
-
-[3 <./report_files/figure-latex/unnamed-chunk-1-1.pdf>]
-
-[4 <./report_files/figure-latex/unnamed-chunk-2-1.pdf>]
-<report_files/figure-latex/analysis - correlation matrix-1.pdf, id=85, 447.6725
-pt x 337.26pt>
+<report_files/figure-latex/analysis - correlation matrix-1.pdf, id=91, 443.6575
+pt x 705.63625pt>
 File: report_files/figure-latex/analysis - correlation matrix-1.pdf Graphic fil
 e (type pdf)
 <use report_files/figure-latex/analysis - correlation matrix-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/analysis - correlation matri
-x-1.pdf  used on input line 194.
-(pdftex.def)             Requested size: 447.67822pt x 337.26431pt.
+x-1.pdf  used on input line 381.
+(pdftex.def)             Requested size: 440.43404pt x 700.50935pt.
 
 
-[5 <./report_files/figure-latex/corr-1.pdf>]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-96.
-(/usr/local/texlive/2024/texmf-dist/tex/latex/lm/t1lmtt.fd
-File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-<report_files/figure-latex/analysis - PCA-1.pdf, id=98, 712.6625pt x 316.18124p
-t>
-File: report_files/figure-latex/analysis - PCA-1.pdf Graphic file (type pdf)
-<use report_files/figure-latex/analysis - PCA-1.pdf>
-Package pdftex.def Info: report_files/figure-latex/analysis - PCA-1.pdf  used o
-n input line 204.
-(pdftex.def)             Requested size: 452.97064pt x 200.96584pt.
-<report_files/figure-latex/unnamed-chunk-5-1.pdf, id=99, 398.48875pt x 313.17pt
+[6 <./report_files/figure-latex/corr dresden pop-1.pdf>]
+
+[7 <./report_files/figure-latex/analysis - correlation matrix-1.pdf>]
+Overfull \hbox (1009.00337pt too wide) in paragraph at lines 389--396
+ [][] 
+ []
+
+<report_files/figure-latex/pca screeplot-1.pdf, id=117, 712.6625pt x 315.1775pt
 >
-File: report_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf)
-<use report_files/figure-latex/unnamed-chunk-5-1.pdf>
-Package pdftex.def Info: report_files/figure-latex/unnamed-chunk-5-1.pdf  used 
-on input line 208.
-(pdftex.def)             Requested size: 398.49992pt x 313.17877pt.
+File: report_files/figure-latex/pca screeplot-1.pdf Graphic file (type pdf)
+<use report_files/figure-latex/pca screeplot-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/pca screeplot-1.pdf  used on
+ input line 398.
+(pdftex.def)             Requested size: 452.97064pt x 200.32785pt.
 
 
-[6 <./report_files/figure-latex/analysis - correlation matrix-1.pdf> <./report_
-files/figure-latex/analysis - PCA-1.pdf>]
-
-LaTeX Warning: Float too large for page by 1727.4768pt on input line 582.
-
-
-
-[7 <./report_files/figure-latex/unnamed-chunk-5-1.pdf>]
-
-[8]
+[8 <./report_files/figure-latex/pca screeplot-1.pdf>]
 
 [9] (./report.aux)
  ***********
@@ -758,13 +745,13 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 15359 strings out of 473600
- 242543 string characters out of 5728702
- 1989905 words of memory out of 5000000
- 37837 multiletter control sequences out of 15000+600000
- 621987 words of font info for 129 fonts, out of 8000000 for 9000
+ 15310 strings out of 473600
+ 241458 string characters out of 5728702
+ 1960905 words of memory out of 5000000
+ 37787 multiletter control sequences out of 15000+600000
+ 621834 words of font info for 130 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 83i,9n,93p,1003b,482s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 83i,9n,93p,1003b,455s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></usr/lo
 cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/local/texliv
 e/2024/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2024/texm
@@ -772,12 +759,11 @@ f-dist/fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/2024/texmf-dist/font
 s/type1/public/lm/lmr17.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/pub
 lic/lm/lmr6.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmr7.
 pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmr8.pfb></usr/lo
-cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmri10.pfb></usr/local/texliv
-e/2024/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on report.pdf (9 pages, 2676166 bytes).
+cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
+Output written on report.pdf (9 pages, 2464135 bytes).
 PDF statistics:
- 237 PDF objects out of 1000 (max. 8388607)
- 174 compressed objects within 2 object streams
- 30 named destinations out of 1000 (max. 500000)
- 34916 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 229 PDF objects out of 1000 (max. 8388607)
+ 171 compressed objects within 2 object streams
+ 31 named destinations out of 1000 (max. 500000)
+ 34919 words of extra memory for PDF output out of 35830 (max. 10000000)
 

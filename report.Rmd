@@ -44,7 +44,7 @@ lapply(packages, library, character.only = T)
 
 <!-- The report itself should be an R markdown or a Quarto R document of roughly 5 pages (counting without code but including meaningful images or tables that you create), and I should find inside of it a part where you explain the data structure and show summary statistics, a part where you present your research questions and your starting hypothesis, a part where you explain your chosen method of analysis and then apply it and finally a concluding part where you discuss what you find in relation to your hypothesis. -->
 
-```{r Data Setup, echo=, warning=FALSE}
+```{r Data Setup, echo=F, warning=F}
 # Open Data Dresden Portal Data
 stadtteile_sf = read_sf(here("data", "stadtteile.gpkg"))
 bevoelkerung_0_bis_5_jahre_sf = read_sf(here("data", "bevoelkerung_0_bis_5_jahre.gpkg"))
@@ -57,17 +57,20 @@ bevoelkerung_ab_75_jahre_sf = read_sf(here("data", "bevoelkerung_ab_75_jahre.gpk
 ambulante_mobile_dienste_sf = read_sf(here("data",  "ambulante_mobile_dienste.gpkg"))
 bahnhoefe_sf = read_sf(here("data", "bahnhoefe_dresden.gpkg"))
 betreutes_wohnen_sf = read_sf(here("data", "betreutes_wohnen.gpkg"))
-buslinien_sf = read_sf(here("data", "buslinien_dresden.gpkg"))
+einwohnerzahlen_absolut = read_csv2(here("data", "einwohnerzahlen_absolut.csv"), col_names = F, show_col_types = F)
 gesundheitseinrichtungen_sf = read_sf(here("data", "gesundheitseinrichtungen.gpkg"))
+grundschulen_sf = read_sf(here("data", "grundschulen.gpkg"))
 haltestellen_sf = read_sf(here("data", "haltestellen_dresden.gpkg"))
-laermindex_sf = read_sf(here("data", "laermindex.gpkg"))
+kindertagesstaetten_sf = read_sf(here("data", "kindertagesstaetten.gpkg"))
+oberschulen_sf = read_sf(here("data", "oberschulen.gpkg"))
 senioren_und_pflegeheime_sf = read_sf(here("data", "senioren_und_pflegeheime.gpkg"))
 seniorenbegegnunsstaetten_sf = read_sf(here("data", "seniorenbegegnunsstaetten.gpkg"))
 
 # Data Preparation
-setdiff(stadtteile_sf$blocknr %>% unique(), bevoelkerung_0_bis_26_jahre_sf$stadtteil %>% unique()) # Check for missing quarters: 33, 34, 44
-# remove missing quarters from stadtteile
-stadtteile_sf = stadtteile_sf %>% filter(!blocknr %in% c(33, 34, 44))
+# setdiff(stadtteile_sf$blocknr %>% unique(), bevoelkerung_0_bis_5_jahre_sf$stadtteil %>% unique()) # Check for missing quarters: 33, 34, 44
+# For better merging
+stadtteile_sf$bez = str_replace_all(stadtteile_sf$bez, "/.+", "")
+einwohnerzahlen_absolut$X1 = str_replace_all(einwohnerzahlen_absolut$X1, "/.+", "")
 
 cityIdToNumeric = function(bevoelkerung) {
   return (bevoelkerung %>% mutate(stadtteil = as.numeric(stadtteil)) %>% arrange(stadtteil)) # Turn chr to numeric
@@ -90,12 +93,17 @@ dresden_stadtteile_distances_to_center = osrm::osrmTable(
   src = dresden_stadtteile_centroids, dst = altmarkt_sf, osrm.profile = "car") # Distance from each quarter center to Altmarkt by car.
 stadtteile_sf$duration_to_altmarkt_by_car = dresden_stadtteile_distances_to_center$durations %>% as.numeric() # Add distance to center to quarters
 
+# Absolute population numbers
+stadtteile_sf = merge(stadtteile_sf, einwohnerzahlen_absolut %>% rename(einwohner_abs = X2), by.x = "bez", by.y = "X1", all.x = T)
 
 # OSM Data features
 # Schools and Kindergartens
-dresden_schools_sf = opq("Dresden") %>% add_osm_feature(key = "amenity", value = "school") %>% osmdata_sf() 
-stadtteile_sf$schools_count = dresden_schools_sf$osm_polygons %>% .[!duplicated(paste0(.$`addr:housenumber`, .$`addr:street`)), ] %>% 
-  st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums()
+stadtteile_sf$grundschulen_count = grundschulen_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$oberschulen_count = oberschulen_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
+stadtteile_sf$kindertagesstaetten_count = kindertagesstaetten_sf %>% 
+  .[!duplicated(paste0(.$strasse, .$hausnummer)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
 # Restaurants
 dresden_restaurants_sf = opq("Dresden") %>% add_osm_feature(key = "amenity", value = "restaurant") %>% osmdata_sf()
 stadtteile_sf$restaurants_count = dresden_restaurants_sf$osm_points %>% .[!duplicated(paste0(.$`addr:housenumber`, .$`addr:street`)), ] %>% 
@@ -144,7 +152,6 @@ stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_60_bis_74_jahre_
 stadtteile_sf = merge(stadtteile_sf, as.data.frame(bevoelkerung_ab_75_jahre_sf)[c("stadtteil", "prozent")] %>% 
         rename(p_from_75_yrs = prozent), by.x = "blocknr", by.y = "stadtteil", all.x = T) 
 
-
 # Gesundheitsdienste Prep
 stadtteile_sf$gesundheitseinrichtungen_count = gesundheitseinrichtungen_sf %>% 
   .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
@@ -159,27 +166,16 @@ stadtteile_sf$betreutes_wohnen_count = betreutes_wohnen_sf %>%
 stadtteile_sf$haltestellen_count = haltestellen_sf %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() 
 stadtteile_sf$bahnhoefe_count = bahnhoefe_sf %>% 
   .[!duplicated(paste0(.$strasse, .$hnr)), ] %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowSums() # filter out duplicates
-stadtteile_sf$laermindex_mean = laermindex_sf %>% st_intersects(x = stadtteile_sf, y = ., sparse = F) %>% rowMeans() 
-
-# OSM Data Preparation
-dresden_osm_sf$osm_points = dresden_osm_sf$osm_points[!duplicated(dresden_osm_sf$osm_points$name) & # TODO: could generalise the inner part to a function for OSM features
-                                                            !is.na(dresden_osm_sf$osm_points$name) & 
-                                                            !duplicated(paste0(dresden_osm_sf$osm_points$`addr:housenumber`, dresden_osm_sf$osm_points$`addr:street`)), ] %>%   # Remove duplicates and NA
-  st_intersection(stadtteile_sf) # Intersect with quarters of Dresden (no offset schools)
-dresden_osm_sf$osm_polygons = dresden_osm_sf$osm_polygons[!duplicated(dresden_osm_sf$osm_polygons$name) & 
-                                                            !is.na(dresden_osm_sf$osm_polygons$name) & 
-                                                            !duplicated(paste0(dresden_osm_sf$osm_polygons$`addr:housenumber`, dresden_osm_sf$osm_polygons$`addr:street`)), ] %>%   # Remove duplicates and NA
-  st_intersection(stadtteile_sf) # Intersect with quarters of Dresden (no offset schools)
 
 ```
 
 # Questions and Hypothesis
 
-This project seeks to explore the reasons for elderly people to live in a certain quarter in Dresden. I think that there are certain factors that make a quarter more attractive for elderly people to live in. These factors could be the availability of health care services, the number of senior citizen meeting places, the number of assisted living facilities, the number of senior and nursing homes, the noise level, and the number of children in the quarter. I hypothesize that these values have an impact on the attractiveness of quarters within Dresden for elderly people to live in. I'll look into these variables in more detail in the following section. The unit of observation is the quarter in Dresden, so I aggregate and/or split the data accordingly. First, I look at the data available, then I'll present some summary statistics, after which I will test the hypothesis and finally discuss the results.
+This project seeks to explore the reasons for elderly people to live in or move to a certain quarter in Dresden. I think that there are certain factors that make a quarter more attractive for elderly people to live in. These factors could be the availability of health care services, the number of senior citizen meeting places, the number of assisted living facilities, the number of senior and nursing homes, the noise level, and the number of children in the quarter. I hypothesize that these values (see below for more detail on all the values) have an impact on the attractiveness of quarters within Dresden for elderly people to live in. I'll look into these variables in more detail in the following section. The unit of observation is the quarter in Dresden, so I aggregate and/or split the data accordingly. First, I look at the data available and show common statistics, then I'll present some summary statistics, after which I will test the hypothesis and finally discuss the results.
 
 # Data Structure
 
-My base datasets on the age of the population in Dresden as well as data on the quarters are downloaded from the OpenData portal Dresden (<https://opendata.dresden.de>) and are available as vector data. The data includes the population at the place of main residence of Dresden split into different age groups, with each group having a different percentage of the population in each quarter. The population at the place of the main residence includes those people who have their sole residence or their main residence in the area concerned.[^1] The data is available for the year 2021. Since the data on the age of the population is aggregated by quarter, let's take a look at the `r nrow(stadtteile_sf)` different quarters first. In the appendix, you can find a map of the block numbers for each quarter and the corresponding name of the quarter.
+My base datasets on the age of the population in Dresden as well as data on the quarters are downloaded from the OpenData portal Dresden (<https://opendata.dresden.de>) and are available as vector data (they're already downloaded and included in the data directory of this project). The data includes the population at the place of main residence of Dresden split into different age groups, with each group having a different percentage of the population in each quarter. The population at the place of the main residence includes those people who have their sole residence or their main residence in the area concerned.[^1] The data is available for the year 2021. Since the data on the age of the population is aggregated by quarter, let's take a look at the `r nrow(stadtteile_sf)` different quarters first. In the appendix, you can find a map of the block numbers for each quarter and the corresponding name of the quarter. The blue dot in the following image shows a central meeting point within the center of Dresden, "Altmarkt". This will become relevant later on.
 
 [^1]: For more information on the data, see <https://kommisdd.dresden.de/net3/public/ogc.ashx?Service=Ikx&RenderHint=TargetHtml&NODEID=378&>.
 
@@ -189,12 +185,12 @@ ggplot(data = stadtteile_sf) +
   # geom_sf(data = dresden_stadtteile_centroids, size = 0.5, colour = "black", alpha = 0.3) + 
   geom_sf_text(aes(label = blocknr), size = 2) +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  geom_sf(data = dresden_osm_sf$osm_polygons, size = 0.5, colour = "red") + geom_sf(data = altmarkt_sf, size = 0.5, colour = "blue")
+  geom_sf(data = altmarkt_sf, size = 1, colour = "blue")
 ```
 
+Let's now take a look at the data on the age of the population in Dresden. Yellow indicates a higher percentage of the population in the respective age group in the quarter (and blue a lower percentage). The data is available for the following age groups: zero to five years, six to 13 years, 14 to 17 years, 18 to 26 years, 27 to 59 years, 60 to 74 years, and from 75 years. There is no data for three of the 64 quarters in Dresden, namely "Flughafen", "Hellerberge" and "Dresdner Heide"; I'll thus exclude these in the analysis.
 
-Let's now take a look at the data on the age of the population in Dresden. Yellow indicates a higher percentage of the population in the respective age group in the quarter (and blue a lower percentage). The data is available for the following age groups: zero to five years, six to 13 years, 14 to 17 years, 18 to 26 years, 27 to 59 years, 60 to 74 years, and from 75 years.
-
+Below, you will find two line graphs and two bar charts; the second row shows the binned versions, that is, I merged the age groups because the middle age group from 27 to 59 makes up quite a large percentage compared to the others.
 
 ```{r dresden pop maps, echo = F, fig.height=6}
 plot_titles = c("0 to 5 years", "6 to 13 years", "14 to 17 years", "18 to 26 years", 
@@ -288,6 +284,25 @@ plot_bar_pop_dd_bin = ggplot(binned_bev_summ, aes(x = gruppe, y = mean)) + geom_
 
 plot_grid(plot_line_pop_dd, plot_line_pop_dd_bin, plot_bar_pop_dd, plot_bar_pop_dd_bin, ncol = 2, rel_widths = c(3, 2), byrow = F)
 ```
+
+The biggest percentage of the population is always taken up by the people between 27 to 59 years, with one exception: in "Südvorstadt-Ost" (quarter id 82), the percentage of people between 18 and 26 years is slightly higher (37.4%) than the percentage of people between 27 and 59 years (35.2%). However, this is an outlier of the share of people between 18 and 26 years as their median percentage is 9.2% and their mean 10.84% with a standard deviation of 5.87%; the people between 27 and 59 years have the highest share with a mean of 43.63%, a median of 42.59% and a standard deviation of 5.13%.
+
+# Statistics Summary
+
+Below, you will find a table of common statistics (mean, median, maximum, minimum and standard deviation) of the used values:
+
+```{r common stats, echo = F}
+stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% dplyr::select(!blocknr) %>% summary()
+```
+
+[@R-OpenStreetMap]
+
+[@europeanenvironmentagencyQuietnessSuitabilityIndex2016]
+
+# Analysis
+
+## Heatmaps
+
 ```{r corr dresden pop, echo = F, fig.height = 5}
 corr_mat_pop = data.frame(bevoelkerung_0_bis_5_jahre_sf$prozent, bevoelkerung_6_bis_13_jahre_sf$prozent, bevoelkerung_14_bis_17_jahre_sf$prozent, bevoelkerung_18_bis_26_jahre_sf$prozent, bevoelkerung_27_bis_59_jahre_sf$prozent, bevoelkerung_60_bis_74_jahre_sf$prozent, bevoelkerung_ab_75_jahre_sf$prozent)
 colnames(corr_mat_pop) = plot_titles
@@ -303,131 +318,52 @@ ggplot(corr_mat_pop, aes(x = Var1, y = Var2, fill = value)) +
 # ggplot(combined_bev_sf) + 
 #   geom_point(aes(x = rep(bevoelkerung_ab_75_jahre_sf$prozent, 7), y = combined_bev_sf$prozent[seq_len(nrow(combined_bev_sf)/7*7)], fill = "gruppe")) 
 ```
-Highest positive correlation: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained that in Germany, people usually stay in school at least until the age of 16 years. 
-All correlations with the oldest age group are negative except for the correlation with the age group 60 to 74 years. This could indicate 
 
-[@R-OpenStreetMap]
+Highest positive correlation: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained that in Germany, people usually stay in school at least until the age of 16 years. All correlations with the oldest age group are negative except for the correlation with the age group 60 to 74 years. This could indicate
 
-[@europeanenvironmentagencyQuietnessSuitabilityIndex2016]
-
-# Statistics Summary
-
-# Method of Analysis and Application
-
-## PCA, t-SNE, Multi-Dimensional Scaling, Heatmaps
-```{r analysis - correlation matrix, echo = F, fig.height = 8}
+```{r analysis - correlation matrix, echo = F, fig.height = 10}
 stadtteile_nums_df = stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% 
   mutate_all(~replace(., is.na(.), 0)) %>% dplyr::select(-c(blocknr))
 stadtteile_nums_df %>% cor(use="na.or.complete") %>% melt() %>% 
   ggplot(aes(x = Var1, y = Var2, fill = value)) + geom_tile() + scale_fill_viridis_c() + 
-  geom_text(aes(label=round(value, 2)), colour = "white") +
+  geom_text(aes(label=round(value, 2)), colour = "white", size = 2) +
   theme_minimal() + theme(axis.text.x = element_text(angle = 90, hjust = 1), 
-                          axis.text.y = element_text(angle = 0)) + 
-  labs(x = "", y = "", title = "Correlation Matrix of Dresden Quarter Features") 
+                          axis.text.y = element_blank(), legend.position = "bottom") + 
+  labs(x = "", y = "", title = "Correlation Matrix of Dresden Quarter Features", fill = "Correlation") 
 
 ```
-```{r analysis - PCA, echo = F, fig.width = 10, warnings = F}
+
+## PCA Analysis
+
+```{r analysis - PCA, echo = F, warnings = F}
 pca_stadtteile = prcomp(stadtteile_nums_df, scale = T)
 pca_stadtteile$eigenvalues = pca_stadtteile$sdev^2
 # biplot(pca_stadtteile)
-PCA(stadtteile_nums_df, graph = T)
+# PCA(stadtteile_nums_df)
+pca_importance <- function(x) {
+  vars <- x$sdev^2
+  vars <- vars/sum(vars)
+  rbind(`Standard deviation` = x$sdev, `Proportion of Variance` = vars, 
+      `Cumulative Proportion` = cumsum(vars))
+}
+pca_importance(pca_stadtteile) %>% kable(format = "latex", booktabs = T, label = "tables", 
+                                          caption = "PCA Importance of Dresden Quarter Features")
+pca_stadtteile$rotation
 
-summary(pca_stadtteile)
-
+#summary(pca_stadtteile)
+```
+```{r pca screeplot, echo = F, fig.width = 10}
 ggplot() + geom_point(aes(x = seq_along(pca_stadtteile$eigenvalues), 
                           y = pca_stadtteile$eigenvalues / sum(pca_stadtteile$eigenvalues))) + 
   geom_line(aes(x = seq_along(pca_stadtteile$eigenvalues), 
                 y = pca_stadtteile$eigenvalues / sum(pca_stadtteile$eigenvalues)), linewidth = 0.2) +
-  geom_vline(xintercept = 4, colour = "red", linewidth = 0.2) +
+  geom_vline(xintercept = 6, colour = "red", linewidth = 0.2) +
   geom_vline(xintercept = 10, colour = "red", linewidth = 0.2) +
   theme_bw() + labs(x = "Principal Component", y = "Proportion of Variance Explained")
 ```
 
 # Conclusion
 
-```{r fig.width=20, echo = F}
-
-```
-
-```{r echo = F}
-# wms_saxony_dgm_url <- "https://geodienste.sachsen.de/wms_geosn_hoehe/guest?VERSION=1.3.0"
-# wms_saxony_wine_url <- "https://www.smul.sachsen.de/gis-online/services/Weinbau_public/MapServer/WmsServer"
-# wms_saxony_terrain_url <- "https://luis.sachsen.de/arcgis/services/boden/bk25wein/MapServer/WMSServer"
-# 
-# ginfo_dgm <- sf::gdal_utils('info', str_c("WMS:", wms_saxony_dgm_url), quiet = T) 
-# lurl_dgm <- ginfo_dgm %>% str_match_all('SUBDATASET_(\\d)_NAME=(.*?)\n') %>% .[[1]] %>% .[, 3]
-# ldesc_dgm = ginfo_dgm %>% str_match_all("SUBDATASET_(\\d)_DESC=(.*?)\n") %>% .[[1]] %>% .[, 3]
-# wms_layers_dgm <- cbind(ldesc_dgm, lurl_dgm)
-# 
-# saxony_map <- st_read(here("data","raw", "gadm41_DEU_shp", "gadm41_DEU_4.shp"), quiet = T) %>% 
-#   filter(NAME_1 == "Sachsen") %>% 
-#   dplyr::select(3)
-# 
-# plot(saxony_map)
-
-```
-
-```{r load packages, echo = F}
-# pacman::p_load(
-#   sf, 
-#   httr,
-#   tidyverse,
-#   ows4R,
-#   here,
-#   gridExtra,
-#   terra
-# )
-```
-
-```{r, fig.width=10, echo = F}
-
-# wfs_laermindex <- "https://kommisdd.dresden.de/net3/public/ogcsl.ashx?nodeid=1047"
-# 
-# 
-# laermindex_client = WFSClient$
-#   new(wfs_laermindex, serviceVersion = "2.1.0")
-# laermindex_feat_name = laermindex_client$getFeatureTypes(pretty = TRUE)[1, "name"]
-# laermindex_client$getCapabilities()$findFeatureByName(laermindex_feat_name)
-# 
-# 
-# url_laermindex <- parse_url(wfs_laermindex)
-# url_laermindex$query <- c(url_laermindex$query, 
-#                           list(service = "wfs", request = "GetFeature", 
-#                                typenames = "regions", srsName = "EPSG:4326"))
-# request <- build_url(url_laermindex)
-# read_sf(request)
-
-
-
-
-dresden_stadtteile_centroids = st_centroid(stadtteile_sf)
-dresden_centroid = st_centroid(st_union(stadtteile_sf))
-
-
-ggplot() +
-  geom_sf(data = stadtteile_sf) + geom_sf(data = dresden_centroid) + theme_minimal()
-
-# saxony_map <- st_read(here("data","raw", "gadm41_DEU_shp", "gadm41_DEU_4.shp"), quiet = T) %>% 
-#   filter(NAME_4 == "Dresden") %>%
-#   dplyr::select(3)
-
-# ggplot() + 
-#   # geom_sf(data = saxony_map) + 
-#   geom_sf(data = stadtteile_sf) +
-#   # geom_sf(data = laermindex_sf) +
-#   geom_sf(data = bevoelkerung_ab_75_jahre_sf, show.legend = T, aes(fill = prozent, color = prozent)) +
-#   #geom_sf(data = gesundheitseinrichtungen_sf, col = "blue", size = 1) +
-#   geom_sf(data = seniorenbegegnunsstaetten_sf, col = "orange", size = 1) +
-#   #geom_sf(data = ambulante_mobile_dienste_sf, col = "yellow", size = 1) +
-#   #geom_sf(data = betreutes_wohnen_sf, col = "green", size = 1) +
-#   geom_sf(data = senioren_und_pflegeheime_sf, col = "red", size = 1)
-
-```
-
-
-The biggest percentage of the population is always taken up by the people between 27 to 59 years, with one exception: in "Südvorstadt-Ost" (quarter id 82), the percentage of people between 18 and 26 years is slightly higher (37.4%) than the percentage of people between 27 and 59 years (35.2%). However, this is an outlier of the share of people between 18 and 26 years as their median percentage is 9.2% and their mean 10.84% with a standard deviation of 5.87%; the people between 27 and 59 years have the highest share with a mean of 43.63%, a median of 42.59% and a standard deviation of 5.13%.
-
-[@R-terra] [@R-sf] [@R-tidyverse] [@R-here] [@R-gridExtra]
 
 # References
 
@@ -445,8 +381,4 @@ list(stadtteile_df[rows, ], stadtteile_df[-rows, ]) %>%
   kable(format = "latex", booktabs = T, label = "tables", row.names = F,
         caption = "Block numbers and names of quarters in Dresden", 
         col.names = c("Block Number", "Quarter Name")) 
-
-binned_bev_sf %>% kable(format = "latex", booktabs = T, label = "tables", row.names = F,
-        caption = "Binned population in Dresden by age groups and quarter stats, measured in 2021", 
-        col.names = c("Quarter Nr.", "Age Group", "Percentage")) 
 ```
