@@ -36,7 +36,8 @@ packages = c(
   "osrm",
   "factoextra",
   "MASS",
-  "FactoMineR"
+  "FactoMineR",
+  "ggfortify"
 )
 lapply(packages, library, character.only = T)
 #knitr::write_bib(file = 'packages.bib')
@@ -190,7 +191,9 @@ ggplot(data = stadtteile_sf) +
 
 Another source is the absolute number of people per quarter in Dresden which has been taken from Statista [@dresdenEinwohnerzahlEinzelnenStadtteilen2023] and is part of this repository; it's available as CSV.
 
-The raster data I'm using is a TIF file from the European Environment Agency on the QSI, the quietness suitability ratio. This data is over 2GiB, so you can find it split into pieces in the repository. It has to be merged before usage; it can also be downloaded from the original source[@europeanenvironmentagencyQuietnessSuitabilityIndex2016].
+The raster data I'm using is a TIF file from the European Environment Agency on the QSI, the quietness suitability ratio. This data is over 2GiB, so you can find it split into pieces in the repository. It has to be merged before usage; it can also be downloaded from the original source[@europeanenvironmentagencyQuietnessSuitabilityIndex2016][^2].
+
+[^2]: 2016 Quietness Suitability Index (QSI) raster data from the European Environment Agency, available at <https://sdi.eea.europa.eu/data/e9151c34-da65-48b9-a2ca-b9b835480812>.
 
 I'm also working with data from OSM (OpenStreetMap) on the number of restaurants and surface area of parks in Dresden per quarter. The data has been downloaded from the OSM API using the `osmdata` package.
 
@@ -302,14 +305,10 @@ Below, you will find a table of common statistics (mean, median, maximum, minimu
 ```{r common stats, echo = F}
 stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% dplyr::select(!blocknr) %>% summary()
 ```
-It 
 
+The inspected variables are the surface area per quarter, the absolute number of inhabitants, the number of primary and secondary schools, the number of kindergartens, the number of restaurants, of parks, of health care facilities, of senior citizen meeting places, of assisted living facilities, of senior and nursing homes, of bus stops and of train stations. Also, the duration in minutes to the center of Dresden (I chose Altmarkt as a popular meeting point) by car is included, which was calculated from the centers of each quarter to Altmarkt and using OSM. The percentage of the population in Dresden by age group is also included, including the three binned versions of the age groups.
 
-[@R-OpenStreetMap]
-
-[@europeanenvironmentagencyQuietnessSuitabilityIndex2016]
-
-It is questionable if all of these variables are useful for the analysis as some of them have very few observations like f.ex. the number of health care facilities. I'll look at the correlation matrix of the variables to see if there are  variables that are highly/lowly correlated and could be in- or excluded from the analysis. 
+It is questionable if all of these variables are useful for the analysis as some of them have very few observations like f.ex. the number of health care facilities. I'll look at the correlation matrix of the variables to see if there are variables that are highly/lowly correlated and could be in- or excluded from the analysis.
 
 # Analysis
 
@@ -331,22 +330,27 @@ ggplot(corr_mat_pop, aes(x = Var1, y = Var2, fill = value)) +
 #   geom_point(aes(x = rep(bevoelkerung_ab_75_jahre_sf$prozent, 7), y = combined_bev_sf$prozent[seq_len(nrow(combined_bev_sf)/7*7)], fill = "gruppe")) 
 ```
 
-Highest positive correlation: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained that in Germany, people usually stay in school at least until the age of 16 years. Also, as children between the age of 0 and 5 usually grow up with their parents at their parent's place, these values should be correlated. All correlations with the highest (oldest) age group are negative except for the correlation with the age group 60 to 74 years. This could be an indicator that elderly people prefer to live in quarters with fewer children and fewer younger people (although it is natural that there is some "squeezing out" since I'm dealing with percentages, so if one group grows, some others have to shrink).
+The highest positive correlations are: 27 to 59 years with 0 to 5 years (72%) and 14 to 17 years with 6 to 13 years (89%). The latter could be explained by the fact that in Germany, people usually stay in school at least until the age of 16 years. Also, as children between the age of 0 and 5 usually grow up with their parents at their parent's place, these values should be correlated. All correlations with the highest (oldest) age group are negative except for the correlation with the age group 60 to 74 years. This could be an indicator that elderly people prefer to live in quarters with fewer children and fewer younger people (although it is natural that there is some "squeezing out" since I'm dealing with percentages, so if one group grows, some others inevitably have to shrink).
 
 ```{r analysis - correlation matrix, echo = F, fig.height = 10}
 stadtteile_nums_df = stadtteile_sf %>% as.data.frame %>% select_if(is.numeric) %>% 
   mutate_all(~replace(., is.na(.), 0)) %>% dplyr::select(-c(blocknr))
 stadtteile_nums_df %>% cor(use="na.or.complete") %>% melt() %>% 
   ggplot(aes(x = Var1, y = Var2, fill = value)) + geom_tile() + scale_fill_viridis_c() + 
+  scale_x_discrete(labels = paste0(names(stadtteile_nums_df), " (", 1:ncol(stadtteile_nums_df), ")")) +
+  scale_y_discrete(labels = 1:ncol(stadtteile_nums_df)) +
   geom_text(aes(label=round(value, 2)), colour = "white", size = 2) +
   theme_minimal() + theme(axis.text.x = element_text(angle = 90, hjust = 1), 
-                          axis.text.y = element_blank(), legend.position = "bottom") + 
+                          axis.text.y = element_text(), legend.position = "bottom") + 
   labs(x = "", y = "", title = "Correlation Matrix of Dresden Quarter Features", fill = "Correlation") 
 
 ```
-This correlation matrix of all features/variables shows that 
+
+As the correlation matrix is rather large, I'd like to highlight some of the most interesting correlations: There is a high correlation (82%) between the surface area and the QSI (Quiet Suitability Index) per quarter - this might be because quarters with a larger surface usually also have more free and green space (like f.ex. parks) or because of a lower population density. Whereas the former can't be supported directly by the correlation between the number of parks and the surface area (-7%), the latter can be supported by a negative (-52%) correlation between the absolute number of inhabitants and the surface area. Since larger quarters in Dresden are those that are further away from the center, it would support the argument that elderly people between 60 and 74 years are to move to quieter areas, although it would take them longer to drive into the city center. As we saw above, people from the age of 75 move to the inner quarters again, which could be explained by the fact that they prefer to live in more urban areas with better access to health care facilities and shorter distances to the city center. There is indeed a correlation, although rather weak (16%), to the number of health care facilities, however, for the age group between 60 and 74 years, this correlation is -12%, so this could be a reason why the highest age group moves to the city center again. One can also note that there is a correlation of 15% for the age group of 75+ and a negative correlation of -28% for the age group 60 to 74 years for senior nursing homes, which would again support the thesis of old people moving to town again because of general access to health care (and all that is included, senior nursing homes etc.). However, there is almost no correlation (1% and -4%) for the 75+ group with the number of senior meeting places and the number of assisted living facilities, respectively. There is also positive correlation (18% and 14%), although again rather weak, between the age group 75+ and the number of bus stops and train stations. However, there is a positive correlation between the age group 75+ and primary schools (10%) and kindergartens (18%), which weakens the hypothesis that elderly people prefer to live in quarters with fewer children, although one could argue that this is because they prefer general access to health care, as the age group between 60 and 74 years f.ex. tends to "avoid" people between 18 and 26 years (-31%).
 
 ## PCA Analysis
+
+In the following, you will see a result table of a PCA analysis and a screeplot.
 
 ```{r analysis - PCA, echo = F, warnings = F}
 pca_stadtteile = prcomp(stadtteile_nums_df, scale = T)
@@ -356,12 +360,16 @@ pca_stadtteile$eigenvalues = pca_stadtteile$sdev^2
 pca_importance <- function(x) {
   vars <- x$sdev^2
   vars <- vars/sum(vars)
-  rbind(`Standard deviation` = x$sdev, `Proportion of Variance` = vars, 
-      `Cumulative Proportion` = cumsum(vars))
+  rbind(`Stand. Dev.` = x$sdev, `Prop. of Var.` = vars, 
+      `Cum Prop.` = cumsum(vars))
 }
-pca_importance(pca_stadtteile) %>% kable(format = "latex", booktabs = T, label = "tables", 
-                                          caption = "PCA Importance of Dresden Quarter Features")
-pca_stadtteile$rotation
+pca_df = pca_importance(pca_stadtteile) 
+# pca_stadtteile$rotation
+
+list(pca_df[, 1:7], pca_df[, 8:14], pca_df[, 15:21], pca_df[, 22:ncol(pca_df)]) %>%
+  kable(format = "latex", booktabs = T, label = "tables",
+        caption = "PCA Importance of Dresden Quarter Features") %>% 
+  kable_styling(latex_options = "hold_position")
 
 #summary(pca_stadtteile)
 ```
@@ -376,7 +384,19 @@ ggplot() + geom_point(aes(x = seq_along(pca_stadtteile$eigenvalues),
   theme_bw() + labs(x = "Principal Component", y = "Proportion of Variance Explained")
 ```
 
+One can see that the first PC explains about 24% of the variance and the second PC about 17%, after which the percentage halves. The first six components explain about 68% (first red vertical line in graph above) and the first 10 about 83% (second red vertical line in graph above) of the variance. This means that the first six components are the most important ones and should be used for further analysis. I'll use k-Means clustering with four clusters to see if the quarters can be grouped into four different groups, after which I will plot the two first PCs and colour the clusters by k-Means to see if the PCs can explain the clustering.
+
+```{r clustering, echo = F, fig.width = 10}
+kmeans = eclust(stadtteile_nums_df, k=4)
+```
+```{r clustering plot, echo = F, fig.width = 8}
+autoplot(pca_stadtteile, data = kmeans, colour = "cluster")
+```
+
+One can see that there is some overlap between the clusters and even a few outliers, especially in the second cluster. The first cluster seems to be the most distinct one, although it is not very clear if the PCs can explain the clustering.
+
 # Conclusion
+Although I found some correlations between variables that seem intuitive (f.ex. people in the 75+ age group moving the the center of the city to have better access to general health care services), other parts of the initial hypothesis like dependence on number of restaurants or number of children in the quarter could not be supported by the data. The PCA analysis also did not show a clear clustering of the quarters based on the features I used. This could be due to the fact that the data is not detailed enough or that the variables I used are not the right ones to explain the attractiveness of quarters for elderly people to live in. Also, the data on the age of the population in Dresden could be more detailed, for example, by splitting the age group 27 to 59 years into smaller groups.
 
 # References
 

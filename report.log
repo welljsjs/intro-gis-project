@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.6.20)  7 JUL 2024 21:48
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.6.20)  8 JUL 2024 12:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -672,70 +672,106 @@ Package pdftex.def Info: report_files/figure-latex/base_map_dresden-1.pdf  used
 
 {/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}{/usr/loc
 al/texlive/2024/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}]
-<report_files/figure-latex/dresden pop maps-1.pdf, id=42, 425.59pt x 428.60126p
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
+82.
+(/usr/local/texlive/2024/texmf-dist/tex/latex/lm/t1lmtt.fd
+File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+<report_files/figure-latex/dresden pop maps-1.pdf, id=44, 425.59pt x 428.60126p
 t>
 File: report_files/figure-latex/dresden pop maps-1.pdf Graphic file (type pdf)
 <use report_files/figure-latex/dresden pop maps-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/dresden pop maps-1.pdf  used
- on input line 182.
+ on input line 198.
 (pdftex.def)             Requested size: 425.58894pt x 428.6002pt.
 
 
 [2 <./report_files/figure-latex/base_map_dresden-1.pdf>]
-<report_files/figure-latex/dresden pop stats-1.pdf, id=55, 459.7175pt x 423.582
+<report_files/figure-latex/dresden pop stats-1.pdf, id=60, 459.7175pt x 423.582
 5pt>
 File: report_files/figure-latex/dresden pop stats-1.pdf Graphic file (type pdf)
 
 <use report_files/figure-latex/dresden pop stats-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/dresden pop stats-1.pdf  use
-d on input line 184.
+d on input line 200.
 (pdftex.def)             Requested size: 452.99626pt x 417.38957pt.
 
 
 [3 <./report_files/figure-latex/dresden pop maps-1.pdf>]
 
 [4 <./report_files/figure-latex/dresden pop stats-1.pdf>]
-Overfull \vbox (1002.60149pt too high) has occurred while \output is active []
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+291.
+(/usr/local/texlive/2024/texmf-dist/tex/latex/lm/ts1lmtt.fd
+File: ts1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
 
-
-
-[5]
-<report_files/figure-latex/corr dresden pop-1.pdf, id=90, 439.6425pt x 337.26pt
+[5{/usr/local/texlive/2024/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}]
+<report_files/figure-latex/corr dresden pop-1.pdf, id=96, 439.6425pt x 337.26pt
 >
 File: report_files/figure-latex/corr dresden pop-1.pdf Graphic file (type pdf)
 <use report_files/figure-latex/corr dresden pop-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/corr dresden pop-1.pdf  used
- on input line 372.
+ on input line 314.
 (pdftex.def)             Requested size: 439.64812pt x 337.26431pt.
-<report_files/figure-latex/analysis - correlation matrix-1.pdf, id=91, 443.6575
-pt x 705.63625pt>
+<report_files/figure-latex/analysis - correlation matrix-1.pdf, id=97, 446.6687
+5pt x 705.63625pt>
 File: report_files/figure-latex/analysis - correlation matrix-1.pdf Graphic fil
 e (type pdf)
 <use report_files/figure-latex/analysis - correlation matrix-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/analysis - correlation matri
-x-1.pdf  used on input line 381.
-(pdftex.def)             Requested size: 440.43404pt x 700.50935pt.
+x-1.pdf  used on input line 329.
+(pdftex.def)             Requested size: 443.42342pt x 700.50935pt.
 
 
 [6 <./report_files/figure-latex/corr dresden pop-1.pdf>]
 
 [7 <./report_files/figure-latex/analysis - correlation matrix-1.pdf>]
-Overfull \hbox (1009.00337pt too wide) in paragraph at lines 389--396
+Overfull \hbox (0.72617pt too wide) in paragraph at lines 377--408
  [][] 
  []
 
-<report_files/figure-latex/pca screeplot-1.pdf, id=117, 712.6625pt x 315.1775pt
+
+Overfull \hbox (0.72617pt too wide) in paragraph at lines 377--408
+ [] 
+ []
+
+
+Overfull \hbox (0.72617pt too wide) in paragraph at lines 377--408
+ [] 
+ []
+
+<report_files/figure-latex/pca screeplot-1.pdf, id=123, 712.6625pt x 315.1775pt
 >
 File: report_files/figure-latex/pca screeplot-1.pdf Graphic file (type pdf)
 <use report_files/figure-latex/pca screeplot-1.pdf>
 Package pdftex.def Info: report_files/figure-latex/pca screeplot-1.pdf  used on
- input line 398.
+ input line 410.
 (pdftex.def)             Requested size: 452.97064pt x 200.32785pt.
 
 
-[8 <./report_files/figure-latex/pca screeplot-1.pdf>]
+[8]
+<report_files/figure-latex/clustering-1.pdf, id=129, 706.64pt x 315.1775pt>
+File: report_files/figure-latex/clustering-1.pdf Graphic file (type pdf)
+<use report_files/figure-latex/clustering-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/clustering-1.pdf  used on in
+put line 423.
+(pdftex.def)             Requested size: 452.97047pt x 202.03513pt.
+<report_files/figure-latex/clustering plot-1.pdf, id=130, 562.1pt x 315.1775pt>
 
-[9] (./report.aux)
+File: report_files/figure-latex/clustering plot-1.pdf Graphic file (type pdf)
+<use report_files/figure-latex/clustering plot-1.pdf>
+Package pdftex.def Info: report_files/figure-latex/clustering plot-1.pdf  used 
+on input line 424.
+(pdftex.def)             Requested size: 452.96558pt x 253.98427pt.
+
+
+[9 <./report_files/figure-latex/pca screeplot-1.pdf> <./report_files/figure-lat
+ex/clustering-1.pdf>]
+
+[10 <./report_files/figure-latex/clustering plot-1.pdf>]
+
+[11] (./report.aux)
  ***********
 LaTeX2e <2024-06-01> patch level 1
 L3 programming layer <2024-05-27>
@@ -745,13 +781,13 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 15310 strings out of 473600
- 241458 string characters out of 5728702
- 1960905 words of memory out of 5000000
- 37787 multiletter control sequences out of 15000+600000
- 621834 words of font info for 130 fonts, out of 8000000 for 9000
+ 15431 strings out of 473600
+ 243883 string characters out of 5728702
+ 1955905 words of memory out of 5000000
+ 37874 multiletter control sequences out of 15000+600000
+ 619216 words of font info for 145 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 83i,9n,93p,1003b,455s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 83i,9n,93p,1003b,758s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></usr/lo
 cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></usr/local/texliv
 e/2024/texmf-dist/fonts/type1/public/lm/lmr10.pfb></usr/local/texlive/2024/texm
@@ -759,11 +795,11 @@ f-dist/fonts/type1/public/lm/lmr12.pfb></usr/local/texlive/2024/texmf-dist/font
 s/type1/public/lm/lmr17.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/pub
 lic/lm/lmr6.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmr7.
 pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/lm/lmr8.pfb></usr/lo
-cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmri10.pfb>
-Output written on report.pdf (9 pages, 2464135 bytes).
+cal/texlive/2024/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
+Output written on report.pdf (11 pages, 2496399 bytes).
 PDF statistics:
- 229 PDF objects out of 1000 (max. 8388607)
- 171 compressed objects within 2 object streams
- 31 named destinations out of 1000 (max. 500000)
- 34919 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 250 PDF objects out of 1000 (max. 8388607)
+ 183 compressed objects within 2 object streams
+ 29 named destinations out of 1000 (max. 500000)
+ 32881 words of extra memory for PDF output out of 35830 (max. 10000000)
 
