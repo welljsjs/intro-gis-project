@@ -389,6 +389,7 @@ One can see that the first PC explains about 24% of the variance and the second 
 ```{r clustering, echo = F, fig.width = 10}
 kmeans = eclust(stadtteile_nums_df, k=4)
 ```
+
 ```{r clustering plot, echo = F, fig.width = 8}
 autoplot(pca_stadtteile, data = kmeans, colour = "cluster")
 ```
@@ -396,7 +397,8 @@ autoplot(pca_stadtteile, data = kmeans, colour = "cluster")
 One can see that there is some overlap between the clusters and even a few outliers, especially in the second cluster. The first cluster seems to be the most distinct one, although it is not very clear if the PCs can explain the clustering.
 
 # Conclusion
-Although I found some correlations between variables that seem intuitive (f.ex. people in the 75+ age group moving the the center of the city to have better access to general health care services), other parts of the initial hypothesis like dependence on number of restaurants or number of children in the quarter could not be supported by the data. The PCA analysis also did not show a clear clustering of the quarters based on the features I used. This could be due to the fact that the data is not detailed enough or that the variables I used are not the right ones to explain the attractiveness of quarters for elderly people to live in. Also, the data on the age of the population in Dresden could be more detailed, for example, by splitting the age group 27 to 59 years into smaller groups.
+
+Although I found some correlations between variables that seem intuitive (f.ex. people in the 75+ age group moving the the center of the city to have better access to general health care services), other parts of the initial hypothesis like dependence on number of restaurants or number of children in the quarter could not be supported by the data. The thought that elderly people move to the center of the city because of general health services seems to be backed by the data. The PCA analysis did not show a clear clustering of the quarters based on the features I used. This could be due to the fact that the data is not detailed enough or that the variables I used are not the right ones to explain the attractiveness of quarters for elderly people to live in. Also, the data on the age of the population in Dresden could be more detailed, for example, by splitting the age group 27 to 59 years into smaller groups. Also, regarding the QSI that generally increases in larger areas and consequently in areas further away from the center, people between 60 and 74 years seem to prefer quieter areas, while people at 75+ seem to value access to general health services higher.
 
 # References
 
