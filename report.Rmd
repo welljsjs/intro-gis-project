@@ -43,8 +43,6 @@ lapply(packages, library, character.only = T)
 #knitr::write_bib(file = 'packages.bib')
 ```
 
-<!-- The report itself should be an R markdown or a Quarto R document of roughly 5 pages (counting without code but including meaningful images or tables that you create), and I should find inside of it a part where you explain the data structure and show summary statistics, a part where you present your research questions and your starting hypothesis, a part where you explain your chosen method of analysis and then apply it and finally a concluding part where you discuss what you find in relation to your hypothesis. -->
-
 ```{r Data Setup, echo=F, warning=F}
 # Open Data Dresden Portal Data
 stadtteile_sf = read_sf(here("data", "stadtteile.gpkg"))
@@ -191,7 +189,7 @@ ggplot(data = stadtteile_sf) +
 
 Another source is the absolute number of people per quarter in Dresden which has been taken from Statista [@dresdenEinwohnerzahlEinzelnenStadtteilen2023] and is part of this repository; it's available as CSV.
 
-The raster data I'm using is a TIF file from the European Environment Agency on the QSI, the quietness suitability ratio. This data is over 2GiB, so you can find it split into pieces in the repository. It has to be merged before usage; it can also be downloaded from the original source[@europeanenvironmentagencyQuietnessSuitabilityIndex2016][^2].
+The raster data I'm using is a TIF file from the European Environment Agency on the QSI, the quietness suitability ratio. This data is over 2GiB, it can also be downloaded from the original source[@europeanenvironmentagencyQuietnessSuitabilityIndex2016][^2].
 
 [^2]: 2016 Quietness Suitability Index (QSI) raster data from the European Environment Agency, available at <https://sdi.eea.europa.eu/data/e9151c34-da65-48b9-a2ca-b9b835480812>.
 
